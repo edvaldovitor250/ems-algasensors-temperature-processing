@@ -1,11 +1,9 @@
-server.port: 8081
-
 spring:
-  application.name: temperature-processing
+  application:
+    name: temperature-processing
 
   rabbitmq:
     host: localhost
     port: 5672
-    stream:
-      username: rabbitmq
-      password: rabbitmq
+    username: rabbitmq
+    password: rabbitmq
