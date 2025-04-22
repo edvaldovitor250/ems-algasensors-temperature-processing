@@ -3,16 +3,23 @@ package com.algaworks.algasensors.temperatureprocessing.api.controller;
 import com.algaworks.algasensors.temperatureprocessing.api.model.TemperatureLogOutPut;
 import com.algaworks.algasensors.temperatureprocessing.coomon.IdGenerator;
 import io.hypersistence.tsid.TSID;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
 
+import static com.algaworks.algasensors.temperatureprocessing.infrastructure.rabbitmq.RabbitMQConfig.FANOUT_EXCHANGE_NAME;
+
 @RestController
 @RequestMapping("/api/sensors/{sensorId}/temperatures/data")
 @Slf4j
+@RequiredArgsConstructor
 public class TemperatureProcessingController {
+
+    private final RabbitTemplate rabbitTemplate;
 
     @PostMapping(consumes = MediaType.TEXT_PLAIN_VALUE)
     public void data(@PathVariable TSID sensorId, @RequestBody String input) {
@@ -22,6 +29,7 @@ public class TemperatureProcessingController {
         }
 
         Double temperature;
+
         try {
             temperature = Double.parseDouble(input);
         } catch (NumberFormatException e) {
@@ -36,5 +44,12 @@ public class TemperatureProcessingController {
                 .build();
 
         log.info(temperatureLog.toString());
+
+        String exchange = FANOUT_EXCHANGE_NAME;
+        String routingKey = "";
+
+        Object payload = temperatureLog;
+
+        rabbitTemplate.convertAndSend(exchange,routingKey,payload);
     }
 }
