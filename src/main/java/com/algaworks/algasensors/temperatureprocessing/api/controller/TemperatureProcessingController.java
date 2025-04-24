@@ -5,6 +5,7 @@ import com.algaworks.algasensors.temperatureprocessing.coomon.IdGenerator;
 import io.hypersistence.tsid.TSID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -50,6 +51,12 @@ public class TemperatureProcessingController {
 
         Object payload = temperatureLog;
 
-        rabbitTemplate.convertAndSend(exchange,routingKey,payload);
+        MessagePostProcessor messagePostProcessor = message -> {
+            message.getMessageProperties().setHeader("sensorId", temperatureLog.getSensorId().toString());
+
+            return message;
+        };
+
+        rabbitTemplate.convertAndSend(exchange,routingKey,payload, messagePostProcessor);
     }
 }
